@@ -25,5 +25,10 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </Content>
     </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Rawpotion.Identity.Account\Rawpotion.Identity.Account.csproj" />
+      <ProjectReference Include="..\Rawpotion.Identity.Common\Rawpotion.Identity.Common.csproj" />
+    </ItemGroup>
 
 </Project>

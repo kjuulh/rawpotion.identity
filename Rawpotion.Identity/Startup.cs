@@ -6,13 +6,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Rawpotion.Identity.Account.DependencyInjection;
+using Rawpotion.Identity.Common;
+using Rawpotion.Identity.Common.Extensions;
 using Rawpotion.Identity.Configuration;
 using Rawpotion.Identity.Data;
 using Rawpotion.Identity.Data.Models;
+using Rawpotion.Identity.Senders;
 
 namespace Rawpotion.Identity
 {
@@ -34,7 +39,8 @@ namespace Rawpotion.Identity
                 options.UseSqlite(_configuration.GetConnectionString("Rawpotion.Identity.Connection"));
             });
 
-            services.AddDefaultIdentity<ApplicationUser>()
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddAuthentication()
@@ -43,6 +49,8 @@ namespace Rawpotion.Identity
                     options.ClientId = "Something";
                     options.ClientSecret = "Something Else";
                 });
+
+            services.AddSingleton<IEmailSender, EmailSender>();
             
             var builder = services.AddIdentityServer(options =>
                 {
@@ -53,7 +61,9 @@ namespace Rawpotion.Identity
 
                     options.EmitStaticAudienceClaim = true;
 
-                    options.UserInteraction.LoginUrl = "~/Identity/Account/Login";
+                    options.UserInteraction.LoginUrl = "~/identity/account/login";
+                    options.UserInteraction.LogoutUrl = "~/identity/account/logout";
+                    options.UserInteraction.ErrorUrl = "~/identity/account/error";
                 })
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
@@ -63,6 +73,11 @@ namespace Rawpotion.Identity
             builder.AddDeveloperSigningCredential();
             
             services.AddRazorPages();
+
+            services.AddRawpotionService(options =>
+            {
+                options.AddRawpotionAccount();
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -78,6 +93,8 @@ namespace Rawpotion.Identity
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
+
+            app.UseRawpotionService();
 
             app.UseEndpoints(endpoints =>
             {
