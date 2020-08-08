@@ -1,0 +1,7 @@
+services:
+  identity:
+    environments:
+      restore:
+        command: 'dotnet restore'
+      dev: 
+        command: 'dotnet watch run'
